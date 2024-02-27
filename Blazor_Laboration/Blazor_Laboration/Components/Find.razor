@@ -1,0 +1,350 @@
+﻿@page "/find"
+@using Blazor_Laboration.Entities
+@using System.Collections
+@using System.Reflection
+@using Blazor_Laboration.Enums
+@using Blazor_Laboration.Interfaces
+@using System.Linq.Expressions
+@inject IBlazorRepository repository
+
+<h3>Find</h3>
+@switch (operation)
+{
+	case Operation.SelectEntityToFind:
+		<InputSelect @bind-Value="entity">
+			<option>Select an option</option>
+			@foreach (var obj in objects)
+			{
+				<option>@obj.GetType().Name</option>
+			}
+		</InputSelect>
+		<div>
+			<button class="btn-dark" @onclick=EntitySelected>Go</button>
+		</div>
+		<br />
+		@if (message != null)
+		{
+			<p class="validation-message">@message</p>
+		}
+		break;
+
+	case Operation.SelectPropertyToFind:
+		<InputSelect @bind-Value="property">
+			@foreach (var prop in _entity.GetType().GetProperties())
+			{
+			if ((prop.PropertyType == typeof(int)) || (prop.PropertyType == typeof(string)))
+				{
+					<option>@prop.Name</option>
+				}
+			}
+		</InputSelect>
+		<div>
+			<button class="btn-dark" @onclick=OptionBackward>Back</button>
+			<button class="btn-dark" style="float:right" @onclick=PropertySelected>Go</button>
+		</div>
+		<br />
+		break;
+
+	case Operation.InsertStringValueToFind:
+		<InputText @bind-Value="@stringValue" />
+		<div>
+			<button class="btn-dark" @onclick=OptionBackward>Back</button>
+			<button class="btn-dark" style="float:right" @onclick=FindEntitiesAsync>Go</button>
+		</div>
+		break;
+
+		case Operation.InsertIntValueToFind:
+		<InputNumber @bind-Value="@intValue" />
+		<div>
+			<button class="btn-dark" @onclick=OptionBackward>Back</button>
+			<button class="btn-dark" style="float:right" @onclick=FindEntitiesAsync>Go</button>
+		</div>
+		break;
+
+	case Operation.ShowFoundResult:
+		<div class="list-group">
+			<br />
+			@if(message != null)
+			{
+				<p class="validation-message"></p>
+			}
+			@foreach (var result in results)
+			{
+				object item = result;
+				@foreach (var prop in item.GetType().GetProperties())
+				{
+					<p class="text-dark">@prop.Name : @prop.GetValue(item)</p>
+				}
+				<div>
+					<button class="btn-dark" @onclick="()=>Edit(item)">Edit</button>
+					<button class="btn-dark" style="float:right" @onclick="()=>Delete(_entity)">Delete</button>
+				</div>
+				<hr />
+			}
+		</div>
+		<button class="btn-dark" @onclick=ResetOption>Go Back</button>
+		@if (message != null)
+		{
+			<div class="alert-secondary" style="text-align:center">
+				<p class="text-danger">@message</p>
+			</div>
+		}
+	break;
+
+	case Operation.SelectPropertyToEdit:
+
+		<InputSelect @bind-Value="property">
+		@foreach (var prop in _entity.GetType().GetProperties())
+		{
+			<option>@prop.Name</option>
+		}
+		</InputSelect>
+		<div>
+			<button class="btn-dark" @onclick=OptionBackward>Go Back</button>
+			<button class="btn-dark" style="float:right" @onclick="()=>operation = Operation.EditProperty">Go</button>
+		</div>
+		break;
+
+	case Operation.EditProperty:
+		var propertyType = _entity.GetType().GetProperty(property).PropertyType;
+		<label class="form-label">Enter the new value:</label>
+		if (propertyType == typeof(int))
+		{
+			<InputNumber @bind-Value="@intValue" />
+		}
+		if (propertyType == typeof(string))
+		{
+			<InputText @bind-Value="@stringValue" />
+		}
+		<div>
+			<button class="btn-dark" @onclick=OptionBackward>Go Back</button>
+			<button class="btn-dark" style="float:right" @onclick=UpdateAsync>Update</button>
+		</div>
+		break;
+}
+
+@code {
+
+	List<object> objects = new List<object>()
+	{new Product(), new Customer(), new ShoppingCart(), new Order() };
+	List<object> results;
+	object _entity;
+	string entity;
+	string property;
+	string stringValue;
+	int intValue;
+	string message;
+	object value;
+	Operation operation = Operation.SelectEntityToFind;
+
+	void OptionBackward()
+	{
+		value = null;
+		operation--;
+		StateHasChanged();
+	}
+
+	void EntitySelected()
+	{
+		message = "";
+		_entity = objects.Find(obj => obj.GetType().Name == entity);
+		if (_entity == null)
+		{
+			operation = Operation.SelectEntityToFind;
+		}
+		else
+		{
+			property = "";
+			operation++;
+		}
+	}
+
+	void PropertySelected()
+	{
+		if (property != null)
+		{
+			var _property = _entity.GetType().GetProperty(property);
+			var propertyType = _property.PropertyType;
+			if (propertyType == typeof(string))
+			{
+				stringValue = "";
+				operation =  Operation.InsertStringValueToFind;
+			}
+			if (propertyType == typeof(int))
+			{
+				intValue = 0;
+				operation = Operation.InsertIntValueToFind;
+			}
+		}
+	}
+
+	void ResetOption()
+	{
+		message = "";
+		results = null;
+		_entity = null;
+		entity = null;
+		property = null;
+		stringValue = null;
+		intValue = default;
+		value = null;
+		operation = Operation.SelectEntityToFind;
+	}
+
+	async Task<dynamic> GenerateGeneric(string methodName, object obj, string propertyName, dynamic constantValue)
+	{		
+		var pe = Expression.Parameter(obj.GetType(), obj.GetType().Name);
+		var left = Expression.Property(pe, obj.GetType().GetProperty(propertyName));
+		var right = Expression.Constant(constantValue);
+		var expression = Expression.Lambda(Expression.Equal(left, right), new ParameterExpression[] { pe });
+		var method = typeof(IBlazorRepository).GetMethod(methodName);
+		var generic = method.MakeGenericMethod(obj.GetType());
+		dynamic task = generic.Invoke(repository, new object[] { expression });
+		var response = await task;
+		return response;
+	}
+
+	dynamic ConstantValue()
+	{
+		dynamic value = default;
+		if (stringValue != null)
+		{
+			value = stringValue;
+		}
+		if (intValue > 0)
+		{
+			value = intValue;
+		}
+		return value;
+	}
+
+	async Task FindEntityAsync()
+	{
+		try
+		{
+			dynamic constantValue = ConstantValue();
+			dynamic item = await GenerateGeneric("GetEntityAsync", _entity, "Id", constantValue);
+			_entity = item;
+			operation = Operation.SelectPropertyToEdit;
+		}
+		catch (Exception e)
+		{
+			message = e.Message;
+			if (_entity == null)
+			{
+				operation = Operation.ShowFoundResult;
+			}
+			else
+			{
+				operation = Operation.SelectEntityToFind;
+			}
+		}
+	}
+
+	async Task FindEntitiesAsync()
+	{
+		try
+		{
+			dynamic constantValue = ConstantValue();
+			dynamic items = await GenerateGeneric("GetEntitiesAsync", _entity, property, constantValue);
+			results = new List<object>();
+			foreach (var item in items)
+			{
+				results.Add(item);
+			}
+			operation = Operation.ShowFoundResult;
+		}
+		catch (Exception e)
+		{
+			message = e.Message;
+			if(_entity == null)
+			{
+				operation = Operation.ShowFoundResult;
+			}
+			else
+			{
+				operation = Operation.SelectEntityToFind;
+			}
+		}
+	}
+
+	async Task Delete(object obj)
+	{
+		try
+		{
+			dynamic constantValue = ConstantValue();
+			dynamic item = await GenerateGeneric("GetEntityAsync", obj, "Id", constantValue);
+			bool response = repository.DeletEntityAsync(item);
+			if (response)
+			{
+				message = "Deleted";
+			}
+			else
+			{
+				message = "Could not delete.";
+			}
+			await FindEntitiesAsync();
+		}
+		catch (Exception e)
+		{
+			message = e.Message;
+			if (_entity == null)
+			{
+				operation = Operation.ShowFoundResult;
+			}
+			else
+			{
+				ResetOption();
+				operation = Operation.SelectEntityToFind;
+			}
+		}
+	}
+
+	void Edit(object obj)
+	{
+		intValue = 0;
+		stringValue = "";
+		_entity = obj;
+		operation = Operation.SelectPropertyToEdit;
+	}
+
+	async Task UpdateAsync()
+	{
+		message = "";
+		bool isUpdated = false;
+		try
+		{
+			var objectId = _entity.GetType().GetProperty("Id").GetValue(_entity);
+			var itemToUpdate = await GenerateGeneric("GetEntityAsync", _entity, "Id", objectId);
+			var _property = itemToUpdate.GetType().GetProperty(property);
+			if (intValue > 0)
+			{
+				int updateProperty = (int)(_entity.GetType().GetProperty(property).GetValue(_entity));
+				updateProperty = intValue;
+				_property.SetValue(itemToUpdate, updateProperty);
+			}
+			else if (stringValue != null)
+			{
+				string updateProperty = (string)(_entity.GetType().GetProperty(property).GetValue(_entity));
+				updateProperty = stringValue;
+				_property.SetValue(itemToUpdate, updateProperty);
+			}
+
+			isUpdated = await repository.SaveChangesAsync();
+
+			await FindEntitiesAsync();
+
+			if (isUpdated)
+			{
+				message = "Successfully updated!";
+			}
+			operation = Operation.ShowFoundResult;
+		}
+		catch (Exception e)
+		{
+			message = e.Message;
+			operation = Operation.SelectEntityToFind;
+		}
+	}
+}
+

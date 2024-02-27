@@ -1,0 +1,100 @@
+﻿@page "/addproduct"
+@rendermode InteractiveServer
+@using Blazor_Laboration.Entities
+@using Blazor_Laboration.Interfaces
+@using Blazor_Laboration.Repository
+@inject IBlazorRepository repository
+@inject IWebHostEnvironment WebHostEnvironment
+
+<PageTitle>Add Product</PageTitle>
+
+
+@if (buttonClicked == false)
+{
+    <h1 class="h1">Add Product</h1>
+
+    <p class="p-lg-5">Enter the product's information:</p>
+    <EditForm Model="product" OnValidSubmit="AddProductInfo">
+    <div class="input-group mb-3">
+        <span class="input-group-text" id="inputGroup-sizing-default">Product Name</span>
+        <InputText @bind-Value="product.Name" class="form-control" aria-label="Sizing example input" aria-describedby="inputGroup-sizing-default" required />
+    </div>
+    <div class="input-group mb-3">
+        <span class="input-group-text" id="inputGroup-sizing-default">Product Description</span>
+        <InputTextArea @bind-Value="product.Description" class="form-control" aria-label="Sizing example input" aria-describedby="inputGroup-sizing-default" required />
+    </div>
+    <div class="input-group mb-3">
+        <span class="input-group-text" id="inputGroup-sizing-default">Price</span>
+        <InputNumber @bind-Value="product.Price" class="form-control" aria-label="Sizing example input" aria-describedby="inputGroup-sizing-default" required />
+    </div>
+    <div class="input-group mb-3">
+        <span class="input-group-text" id="inputGroup-sizing-default">Qauntity</span>
+        <InputNumber @bind-Value="product.Quantity" class="form-control" aria-label="Sizing example input" aria-describedby="inputGroup-sizing-default" required />
+    </div>
+        <button class="btn btn-outline-secondary" type="submit" disabled="@isDisabled">Save</button>
+    </EditForm>
+}
+else
+{
+    <h1 class="h1">Add Image</h1>
+    <br />
+    <div class="p-3 mb-2 bg-light text-dark">
+        <InputFile OnChange="AddImage" />
+    </div>
+    if (imageUrl != string.Empty)
+    {
+        <div class="card" style="width:100%;">
+            <img class="card-img-top" src="@imageUrl" alt="Uploaded Image">
+            <div class="card-body">
+                <h5 class="card-title">@imageName</h5>
+                <p class="card-text">Image has been saved and name is modified with product's name and id.</p>
+                <a @onclick="()=> buttonClicked = false" class="btn btn-primary">Go Back</a>
+            </div>
+        </div>
+    }
+
+}
+
+
+@code{
+    Product product = new Product();
+    int id;
+    bool buttonClicked = false;
+    string imageName = "";
+    string imageUrl = "";
+    bool isDisabled = false;
+
+    async void AddProductInfo()
+    {
+        isDisabled = true;
+        id = await repository.AddEntityAsync<Product>(product);
+        if (id > 0)
+        {
+            imageName = $"{product.Name}_{id}";
+            imageUrl = "";
+            buttonClicked = true;
+            isDisabled = false;
+            product = new Product();
+            StateHasChanged();
+        }
+    }
+
+    async void AddImage(InputFileChangeEventArgs e)
+    {
+        var file = e.File;
+        if (file != null && !imageName.Contains('.'))
+        {
+            var fileType = file.Name.Split(".")[1];
+            imageName += $".{fileType}";
+            var webRootPath = Path.Combine(WebHostEnvironment.WebRootPath, "images");
+            var fileName = Path.Combine(webRootPath, imageName);
+            using (var stream = new FileStream(fileName, FileMode.Create))
+            {
+                await file.OpenReadStream().CopyToAsync(stream);
+            }
+            imageUrl = $"images/{imageName}";
+            await repository.AddToProduct(imageUrl, id);
+            StateHasChanged();
+        }
+    }
+}
