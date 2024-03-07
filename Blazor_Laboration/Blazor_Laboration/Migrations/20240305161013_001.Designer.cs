@@ -12,8 +12,8 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace Blazor_Laboration.Migrations
 {
     [DbContext(typeof(BlazorContext))]
-    [Migration("20240221094809_Migration001")]
-    partial class Migration001
+    [Migration("20240305161013_001")]
+    partial class _001
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -25,6 +25,32 @@ namespace Blazor_Laboration.Migrations
 
             SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder);
 
+            modelBuilder.Entity("Blazor_Laboration.Entities.CartItem", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("ProductId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("Quantity")
+                        .HasColumnType("int");
+
+                    b.Property<int?>("ShoppingCartId")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ProductId");
+
+                    b.HasIndex("ShoppingCartId");
+
+                    b.ToTable("CartItem");
+                });
+
             modelBuilder.Entity("Blazor_Laboration.Entities.Customer", b =>
                 {
                     b.Property<int>("Id")
@@ -34,23 +60,18 @@ namespace Blazor_Laboration.Migrations
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
                     b.Property<string>("Address")
-                        .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("Email")
-                        .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("FirstName")
-                        .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("LastName")
-                        .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("Password")
-                        .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
                     b.HasKey("Id");
@@ -83,14 +104,12 @@ namespace Blazor_Laboration.Migrations
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
                     b.Property<string>("Description")
-                        .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("ImageUrl")
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("Name")
-                        .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<int?>("OrderId")
@@ -102,14 +121,9 @@ namespace Blazor_Laboration.Migrations
                     b.Property<int>("Quantity")
                         .HasColumnType("int");
 
-                    b.Property<int?>("ShoppingCartId")
-                        .HasColumnType("int");
-
                     b.HasKey("Id");
 
                     b.HasIndex("OrderId");
-
-                    b.HasIndex("ShoppingCartId");
 
                     b.ToTable("Products");
                 });
@@ -122,9 +136,27 @@ namespace Blazor_Laboration.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
+                    b.Property<string>("SessionId")
+                        .HasColumnType("nvarchar(max)");
+
                     b.HasKey("Id");
 
                     b.ToTable("ShoppingCarts");
+                });
+
+            modelBuilder.Entity("Blazor_Laboration.Entities.CartItem", b =>
+                {
+                    b.HasOne("Blazor_Laboration.Entities.Product", "Product")
+                        .WithMany()
+                        .HasForeignKey("ProductId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("Blazor_Laboration.Entities.ShoppingCart", null)
+                        .WithMany("CartItems")
+                        .HasForeignKey("ShoppingCartId");
+
+                    b.Navigation("Product");
                 });
 
             modelBuilder.Entity("Blazor_Laboration.Entities.Product", b =>
@@ -132,10 +164,6 @@ namespace Blazor_Laboration.Migrations
                     b.HasOne("Blazor_Laboration.Entities.Order", null)
                         .WithMany("Products")
                         .HasForeignKey("OrderId");
-
-                    b.HasOne("Blazor_Laboration.Entities.ShoppingCart", null)
-                        .WithMany("Products")
-                        .HasForeignKey("ShoppingCartId");
                 });
 
             modelBuilder.Entity("Blazor_Laboration.Entities.Order", b =>
@@ -145,7 +173,7 @@ namespace Blazor_Laboration.Migrations
 
             modelBuilder.Entity("Blazor_Laboration.Entities.ShoppingCart", b =>
                 {
-                    b.Navigation("Products");
+                    b.Navigation("CartItems");
                 });
 #pragma warning restore 612, 618
         }

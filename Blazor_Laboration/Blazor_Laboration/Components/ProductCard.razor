@@ -1,0 +1,31 @@
+﻿@using Blazor_Laboration.Entities
+@using Blazor_Laboration.Interfaces
+@using Blazor_Laboration.Services
+@using Microsoft.AspNetCore.Components.Authorization
+@inject IBlazorRepository repository
+@inject NavigationManager navigation
+
+<div class="float-sm-start" style="width: 33%" >
+<div class="card" style="width: 18rem;" @onclick="()=>GoToProducts(Product.Id)">
+    <img class="card-img-top" src=@Product.ImageUrl alt=@Product.Name>
+    <div class="card-body">
+        <h5 class="card-title">@Product.Name</h5>
+    </div>
+</div>
+<BuyButton @rendermode="InteractiveServer" ProductId="Product.Id" ShoppingCartId="ShoppingCartId"/>
+</div>
+
+@code {
+    [Parameter]
+    public Product Product { get; set; }
+
+    [Parameter]
+    public int ShoppingCartId { get; set; }
+
+    void GoToProducts(int _id)
+    {
+        var value = _id.ToString();
+        var id = Uri.EscapeDataString(value);
+        navigation.NavigateTo($"/products/{id}");
+    }
+}

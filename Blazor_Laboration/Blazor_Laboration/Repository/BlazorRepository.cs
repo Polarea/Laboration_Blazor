@@ -6,7 +6,7 @@ using System.Linq.Expressions;
 
 namespace Blazor_Laboration.Repository
 {
-	public class BlazorRepository : IBlazorRepository
+    public class BlazorRepository : IBlazorRepository
     {
         private readonly BlazorContext _context;
 
@@ -15,13 +15,29 @@ namespace Blazor_Laboration.Repository
             _context = context;
         }
 
-		public async Task AddToCart(Product product, int cartId)
+		public async Task AddToCartAsync(int productId, int cartId, int quantity)
         {
-            var shoppingCart = await _context.Set<IShoppingCart>().FindAsync(cartId);
+            var shoppingCart = await _context.ShoppingCarts
+                .Include(cart => cart.CartItems)
+                .FirstOrDefaultAsync(cart => cart.Id == cartId);
             if (shoppingCart != null)
             {
-                shoppingCart.Products.Add(product);
-                _context.SaveChanges();
+                var product = await _context.Products.FirstOrDefaultAsync(p => p.Id == productId);
+                if (product != null)
+                {
+                    var cartItem = shoppingCart.CartItems.FirstOrDefault(c => c.Product.Id == product.Id);
+                    if (cartItem == null)
+                    {
+						cartItem = new CartItem() { Product = product, Quantity = quantity };
+						shoppingCart.CartItems.Add(cartItem);
+					}
+                    else
+                    {
+                        cartItem.Quantity += quantity;
+                    }
+                    
+                    _context.SaveChanges();
+                }
             }
         }
 
@@ -58,15 +74,26 @@ namespace Blazor_Laboration.Repository
 
 		public async Task<T?> GetEntityAsync<T>(Expression<Func<T, bool>> expression) where T : class
 		{
-			return await _context.Set<T>().FirstOrDefaultAsync(expression);
+            var subEntities = typeof(T).GetProperties();
+            var subEntity = subEntities?.FirstOrDefault(s => s.PropertyType.IsGenericType)?.Name;
+            if (subEntity != null)
+            {
+				return await _context.Set<T>()
+		        .Include(subEntity)
+		        .FirstOrDefaultAsync(expression);
+			}
+            else
+            {
+				return await _context.Set<T>().FirstOrDefaultAsync(expression);
+			}
 		}
 
-		//public async Task<IEnumerable<T>> GetEntitiesAsync<T>() where T : class
-  //      {
-  //          return await _context.Set<T>().ToListAsync();
-  //      }
+        public async Task<IEnumerable<T>> GetEntitiesAsync<T>() where T : class
+        {
+            return await _context.Set<T>().ToListAsync();
+        }
 
-        public async Task<IEnumerable<T?>> GetEntitiesAsync<T>(Expression<Func<T, bool>> expression) where T : class
+        public async Task<IEnumerable<T?>> GetEntitiesByPropertyAsync<T>(Expression<Func<T, bool>> expression) where T : class
         {
             return await _context.Set<T>().Where(expression).ToListAsync();
         }
@@ -74,6 +101,11 @@ namespace Blazor_Laboration.Repository
 		public async Task<bool> SaveChangesAsync()
         {
             return await _context.SaveChangesAsync() >= 1;
+        }
+
+        public void Dispose()
+        {
+            _context.Dispose();
         }
     }
 }

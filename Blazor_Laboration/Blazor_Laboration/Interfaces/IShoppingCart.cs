@@ -5,6 +5,7 @@ namespace Blazor_Laboration.Interfaces
     public interface IShoppingCart
     {
         int Id { get; set; }
-        List<Product> Products { get; set; }
+        string? SessionId { get; set; }
+        List<CartItem> CartItems { get; set; }
     }
 }

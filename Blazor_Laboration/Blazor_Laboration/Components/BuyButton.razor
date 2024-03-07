@@ -1,0 +1,21 @@
+﻿@using Blazor_Laboration.Interfaces
+@inject IBlazorRepository repository
+
+<InputNumber @bind-Value=ProductQuantity Min="1" />
+<button class="btn btn-primary" @onclick=BuyAsync>Buy</button>
+@code 
+{
+    [Parameter]
+    public int ProductId { get; set; }
+
+    [Parameter]
+    public int ShoppingCartId { get; set; }
+
+    [Parameter]
+    public int ProductQuantity { get; set; }
+
+    async Task BuyAsync()
+    {
+        await repository.AddToCartAsync(ProductId, ShoppingCartId, ProductQuantity);
+    }
+}

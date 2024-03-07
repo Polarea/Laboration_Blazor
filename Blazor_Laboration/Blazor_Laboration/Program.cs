@@ -2,13 +2,16 @@ using Blazor_Laboration.Components;
 using Blazor_Laboration.DbContexts;
 using Blazor_Laboration.Interfaces;
 using Blazor_Laboration.Repository;
+using Blazor_Laboration.Services;
 using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
 var connectionString = builder.Configuration.GetConnectionString("BlazorConnection");
 builder.Services.AddDbContext<BlazorContext>(options =>
 options.UseSqlServer(connectionString));
+builder.Services.AddScoped<SharedData>();
 builder.Services.AddScoped<IBlazorRepository, BlazorRepository>();
+builder.Services.AddHttpContextAccessor();
 builder.Services.AddRazorComponents()
     .AddInteractiveServerComponents();
 var app = builder.Build();
@@ -25,7 +28,6 @@ app.UseHttpsRedirection();
 
 app.UseStaticFiles();
 app.UseAntiforgery();
-
 app.MapRazorComponents<App>()
     .AddInteractiveServerRenderMode();
 

@@ -1,0 +1,25 @@
+﻿@page "/shoppingCart"
+@using Blazor_Laboration.Entities
+@using Blazor_Laboration.Services
+@rendermode InteractiveServer
+@inject SharedData data
+
+<PageTitle>Shopping Cart</PageTitle>
+<h3>Shopping Cart</h3>
+<div>
+@foreach (var cartItem in CartItems)
+	{
+		<p>@cartItem.Product.Name  @cartItem.Product.Price Quantity : @cartItem.Quantity</p>
+	}
+</div>
+
+
+@code
+{
+	List<CartItem> CartItems = new();
+
+	protected override void OnInitialized()
+	{
+		CartItems = data.ShoppingCart.CartItems;
+	}
+}
