@@ -12,7 +12,7 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace Blazor_Laboration.Migrations
 {
     [DbContext(typeof(BlazorContext))]
-    [Migration("20240305161013_001")]
+    [Migration("20240307141441_001")]
     partial class _001
     {
         /// <inheritdoc />
@@ -25,6 +25,34 @@ namespace Blazor_Laboration.Migrations
 
             SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder);
 
+            modelBuilder.Entity("Blazor_Laboration.Entities.Address", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("City")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Country")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int>("PostalCode")
+                        .HasColumnType("int");
+
+                    b.Property<int>("ResidenceNumber")
+                        .HasColumnType("int");
+
+                    b.Property<string>("StreetName")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("Address");
+                });
+
             modelBuilder.Entity("Blazor_Laboration.Entities.CartItem", b =>
                 {
                     b.Property<int>("Id")
@@ -33,7 +61,10 @@ namespace Blazor_Laboration.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
-                    b.Property<int>("ProductId")
+                    b.Property<int?>("OrderId")
+                        .HasColumnType("int");
+
+                    b.Property<int?>("ProductId")
                         .HasColumnType("int");
 
                     b.Property<int>("Quantity")
@@ -43,6 +74,8 @@ namespace Blazor_Laboration.Migrations
                         .HasColumnType("int");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("OrderId");
 
                     b.HasIndex("ProductId");
 
@@ -59,8 +92,8 @@ namespace Blazor_Laboration.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
-                    b.Property<string>("Address")
-                        .HasColumnType("nvarchar(max)");
+                    b.Property<int?>("AddressId")
+                        .HasColumnType("int");
 
                     b.Property<string>("Email")
                         .HasColumnType("nvarchar(max)");
@@ -75,6 +108,8 @@ namespace Blazor_Laboration.Migrations
                         .HasColumnType("nvarchar(max)");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("AddressId");
 
                     b.ToTable("Customers");
                 });
@@ -112,9 +147,6 @@ namespace Blazor_Laboration.Migrations
                     b.Property<string>("Name")
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<int?>("OrderId")
-                        .HasColumnType("int");
-
                     b.Property<int>("Price")
                         .HasColumnType("int");
 
@@ -122,8 +154,6 @@ namespace Blazor_Laboration.Migrations
                         .HasColumnType("int");
 
                     b.HasKey("Id");
-
-                    b.HasIndex("OrderId");
 
                     b.ToTable("Products");
                 });
@@ -146,11 +176,13 @@ namespace Blazor_Laboration.Migrations
 
             modelBuilder.Entity("Blazor_Laboration.Entities.CartItem", b =>
                 {
+                    b.HasOne("Blazor_Laboration.Entities.Order", null)
+                        .WithMany("CartItems")
+                        .HasForeignKey("OrderId");
+
                     b.HasOne("Blazor_Laboration.Entities.Product", "Product")
                         .WithMany()
-                        .HasForeignKey("ProductId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+                        .HasForeignKey("ProductId");
 
                     b.HasOne("Blazor_Laboration.Entities.ShoppingCart", null)
                         .WithMany("CartItems")
@@ -159,16 +191,18 @@ namespace Blazor_Laboration.Migrations
                     b.Navigation("Product");
                 });
 
-            modelBuilder.Entity("Blazor_Laboration.Entities.Product", b =>
+            modelBuilder.Entity("Blazor_Laboration.Entities.Customer", b =>
                 {
-                    b.HasOne("Blazor_Laboration.Entities.Order", null)
-                        .WithMany("Products")
-                        .HasForeignKey("OrderId");
+                    b.HasOne("Blazor_Laboration.Entities.Address", "Address")
+                        .WithMany()
+                        .HasForeignKey("AddressId");
+
+                    b.Navigation("Address");
                 });
 
             modelBuilder.Entity("Blazor_Laboration.Entities.Order", b =>
                 {
-                    b.Navigation("Products");
+                    b.Navigation("CartItems");
                 });
 
             modelBuilder.Entity("Blazor_Laboration.Entities.ShoppingCart", b =>

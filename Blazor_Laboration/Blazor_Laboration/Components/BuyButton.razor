@@ -1,7 +1,7 @@
 ﻿@using Blazor_Laboration.Interfaces
 @inject IBlazorRepository repository
 
-<InputNumber @bind-Value=ProductQuantity Min="1" />
+<InputNumber @bind-Value = "ProductQuantity" Min="1" />
 <button class="btn btn-primary" @onclick=BuyAsync>Buy</button>
 @code 
 {

@@ -1,4 +1,6 @@
-﻿namespace Blazor_Laboration.Interfaces
+﻿using Blazor_Laboration.Entities;
+
+namespace Blazor_Laboration.Interfaces
 {
     public interface ICustomer
     {
@@ -7,7 +9,7 @@
         public string? LastName { get; set; }
         public string? Email { get; set; }
         public string? Password { get; set; }
-        public string? Address { get; set; }
+        public Address? Address { get; set; }
 
     }
 }

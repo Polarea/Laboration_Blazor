@@ -6,7 +6,7 @@ namespace Blazor_Laboration.Interfaces
     {
         int Id { get; set; }
         int CustomerId { get; set; }
-        List<Product> Products { get; set; }
+        List<CartItem> CartItems { get; set; }
 
     }
 }

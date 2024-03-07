@@ -7,9 +7,7 @@
 <div class="d-flex justify-content-start" style="width:100%">
 	@foreach (var product in data.Products)
 	{
-		
-				<ProductCard @rendermode="InteractiveServer" Product="@product" ShoppingCartId=@data.ShoppingCart.Id />
-		
+		<ProductCard @rendermode="InteractiveServer" Product="@product" ShoppingCartId=@data.ShoppingCart.Id />
 	}
 </div>
 <div>

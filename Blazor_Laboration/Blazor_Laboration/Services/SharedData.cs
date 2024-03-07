@@ -15,7 +15,7 @@ namespace Blazor_Laboration.Services
         private HttpContext? httpContext => _httpcontextAccessor.HttpContext;
 		private string? sessionId = "";
 
-		public List<Product> Products { get; set; } = new();
+		public List<Product>? Products { get; set; } = new();
 		public ShoppingCart ShoppingCart { get; set; } = new();
 
 		string? GetCookie()

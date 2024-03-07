@@ -1,0 +1,57 @@
+﻿@page "/orderConfirmation/{orderId}"
+@using Blazor_Laboration.Entities
+@using Blazor_Laboration.Interfaces
+@inject IBlazorRepository repository
+
+
+<PageTitle>Order Confirmation</PageTitle>
+
+<div class="h3 bg-light fw-bold">Order Confirmation</div>
+
+<CartItems Title="Order Details" _CartItems="cartItems" />
+
+<div class="h5 bg-light fw-bold">Order (Id: @orderId) will be dilvered to:</div>
+
+<div>
+	<table class="table table-striped table-hover table-borderless" style="max-width:75%">
+		<thead class="fw-bold">customer (Id: @customerId)</thead>
+		<tbody>
+			<tr>
+				<th>Name:</th>
+				<td>@customer?.FirstName @customer?.LastName</td>
+				<th>E-mail:</th>
+				<td>@customer?.Email</td>
+			</tr>
+			<tr>
+				<th>Address:</th>
+				<td>@customer?.Address?.StreetName @customer?.Address?.ResidenceNumber
+					@customer?.Address?.City @customer?.Address?.PostalCode @customer?.Address?.Country</td>
+			</tr>
+		</tbody>
+	</table>
+</div>
+
+@code {
+
+	[Parameter]
+	public string orderId { get; set; }
+
+	Order order = new();
+	int customerId = 0;
+	Customer? customer = new();
+	List<CartItem> cartItems = new();
+
+	async Task GetOrderAsync()
+	{
+		var _orderId = int.Parse(orderId);
+		order = await repository.GetOrderAsync(_orderId);
+		cartItems = order.CartItems;
+		customerId = order.CustomerId;
+		customer = repository.GetCustomer(customerId);
+	}
+
+	protected async override Task OnInitializedAsync()
+	{
+		await GetOrderAsync();
+	}
+}

@@ -1,8 +1,11 @@
-﻿using Blazor_Laboration.DbContexts;
+﻿using Blazor_Laboration.Components.Pages;
+using Blazor_Laboration.DbContexts;
 using Blazor_Laboration.Entities;
 using Blazor_Laboration.Interfaces;
 using Microsoft.EntityFrameworkCore;
 using System.Linq.Expressions;
+using System.Reflection;
+using System.Reflection.Metadata.Ecma335;
 
 namespace Blazor_Laboration.Repository
 {
@@ -41,6 +44,24 @@ namespace Blazor_Laboration.Repository
             }
         }
 
+        public async Task<Order> GetOrderAsync(int orderId)
+        {
+			var order = await _context.Orders
+			.Include(cart => cart.CartItems) 
+            .ThenInclude(items => items.Product)
+			.FirstOrDefaultAsync(order => order.Id == orderId);
+            return order;
+		}
+
+        public Customer? GetCustomer(int customerId)
+        {
+            var customer = _context.Customers
+                .Where(c => c.Address != null)
+                .Include(c => c.Address)
+				.FirstOrDefault(c => c.Id == customerId);
+            return customer;
+        }
+
         public async Task AddToProduct(string url, int productId)
         {
             var product = await _context.Set<Product>().FindAsync(productId);
@@ -68,19 +89,17 @@ namespace Blazor_Laboration.Repository
         public async Task UpdateEntityAsync<T>(Expression<Func<T, bool>> expression, dynamic propertyValue) where T : class
         {
             var obj = await GetEntityAsync(expression);
-
-
         }
 
 		public async Task<T?> GetEntityAsync<T>(Expression<Func<T, bool>> expression) where T : class
 		{
             var subEntities = typeof(T).GetProperties();
-            var subEntity = subEntities?.FirstOrDefault(s => s.PropertyType.IsGenericType)?.Name;
-            if (subEntity != null)
+            var subEntityList = subEntities?.FirstOrDefault(s => s.PropertyType.IsGenericType)?.Name;
+            if (subEntityList != null)
             {
 				return await _context.Set<T>()
-		        .Include(subEntity)
-		        .FirstOrDefaultAsync(expression);
+				.Include(subEntityList)
+				.FirstOrDefaultAsync(expression);
 			}
             else
             {

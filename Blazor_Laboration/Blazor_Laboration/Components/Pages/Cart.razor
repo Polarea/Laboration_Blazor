@@ -1,53 +1,73 @@
 ﻿@page "/shoppingCart"
 @using Blazor_Laboration.Entities
+@using Blazor_Laboration.Interfaces
 @using Blazor_Laboration.Services
 @rendermode InteractiveServer
 @inject SharedData data
+@inject IBlazorRepository repository
+@inject NavigationManager navigation
 
 <PageTitle>Shopping Cart</PageTitle>
-<h3>Shopping Cart</h3>
-<div class="align-content-center" style="max-width:100%">
-	<table class="table table-striped table-hover table-borderless" style="max-width:50%">
-		<thead class ="fw-bold">
-			<tr>
-				<td>Product name</td>
-				<td>Price</td>
-				<td>Quantity</td>
-				<td>Total price</td>
-			</tr>
-		</thead>
-		<tbody>
-		
-			@foreach (var cartItem in CartItems)
-				{
-					totalPrice = cartItem.Quantity * cartItem.Product.Price;
-					grandTotal += totalPrice;
+<CartItems Title="Shopping Cart" _CartItems="cartItems"/>
 
-				<tr>
-					<td>@cartItem.Product.Name</td>
-					<td>@cartItem.Product.Price</td>
-					<td>@cartItem.Quantity</td>
-					<td>@totalPrice</td>
-				</tr>
-				}
-		<tr class="fw-bold">
-			<td colspan="2"></td>
-			<td>Grand total:</td>
-			<td>@grandTotal</td>
-		</tr>
-		</tbody>
-	</table>
+<div class="bg-light p-3 rounded-3" style="max-width:75%">
+	<EditForm class="row g-3" Model="customer" OnSubmit="CreateOrderAsync"> 
+		<div class="col-md-6">
+			<InputText @bind-Value="customer.FirstName" placeholder="First Name" class="form-control" />
+		</div>
+		<div class="col-md-6">
+			<InputText @bind-Value="customer.LastName" placeholder="Last Name" class="form-control" />
+		</div>
+		<div class="col-md-12">
+			<InputText @bind-Value="customer.Email" placeholder="E-mail" class="form-control" />
+		</div>
+		<div class="col-md-8">
+		<InputText @bind-Value="customer.Address.StreetName" placeholder="Street Name" class="form-control" />
+		</div>
+		<div class="col-md-2">
+			<label for="@customer.Address.ResidenceNumber" class="form-label text-black-50 float-end">Residenc Number:</label>
+		</div>
+		<div class="col-md-2">
+		<InputNumber @bind-Value="customer.Address.ResidenceNumber" class="form-control" />
+		</div>
+		<div class="col-md-4">
+			<InputText @bind-Value="customer.Address.City" placeholder="City" class="form-control" />
+		</div>
+		<div class="col-md-2">
+			<label for="@customer.Address.PostalCode" class="form-label text-black-50 float-end">Postal code:</label>
+		</div>
+		<div class="col-md-2">
+			<InputNumber @bind-Value="customer.Address.PostalCode" class="form-control" />
+		</div>
+		<div class="col-md-4">
+			<InputText @bind-Value="customer.Address.Country" placeholder="Country" class="form-control" />
+		</div><div class="col-md-4">
+		<button class="btn btn-primary" type="submit">Order</button>
+		</div>
+	</EditForm>
 </div>
 
 
 @code
 {
-	List<CartItem> CartItems = new();
-	int totalPrice = 0;
-	int grandTotal = 0;
+	Customer customer = new() { Address = new Address() };
+	List<CartItem> cartItems = new();
+	int _orderId = 0;
+	ShoppingCart shoppingCart = new();
+
+	async Task CreateOrderAsync()
+	{
+		var customerId = await repository.AddEntityAsync<Customer>(customer);
+		Order order = new() { CustomerId = customerId, CartItems = cartItems };
+		_orderId = await repository.AddEntityAsync<Order>(order);
+		await repository.DeletEntityAsync<ShoppingCart>(shoppingCart);
+		var orderId = Uri.UnescapeDataString(_orderId.ToString());
+		navigation.NavigateTo($"/orderConfirmation/{orderId}");
+	}
 
 	protected override void OnInitialized()
 	{
-		CartItems = data.ShoppingCart.CartItems;
+		cartItems = data.ShoppingCart.CartItems;
+		shoppingCart = data.ShoppingCart;
 	}
 }
