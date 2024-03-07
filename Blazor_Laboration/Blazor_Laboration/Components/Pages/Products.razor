@@ -9,37 +9,41 @@
 
 <h3>Products</h3>
 <div>
-	<img src="@Product.ImageUrl" class="rounded float-end" style="max-width:50%" alt="@Product.Name">
+	<img src="@product.ImageUrl" class="rounded float-end" style="max-width:50%" alt="@product.Name">
 </div>
 <table class="table table-hover table-borderless" style="max-width:50%">
-	<thead class="h4">@Product.Name</thead>
+	<thead class="h4">@product.Name</thead>
 	<tbody>
 		<tr>
 			<td>Product Id:</td>
-			<td>@Product.Id</td>
+			<td>@product.Id</td>
 		</tr>
 		<tr>
 			<td>Price:</td>
-			<td>@Product.Price</td>
+			<td>@product.Price</td>
 		</tr>
 		<tr>
 			<td>Description:</td>
-			<td>@Product.Description</td>
+			<td>@product.Description</td>
 		</tr>
 	</tbody>
 </table>
+ <BuyButton @rendermode=InteractiveServer ProductId="product.Id" ShoppingCartId="shoppingCartId"/>
+
 
 @code {
 
 	[Parameter]
 	public string Id { get; set; }
 
-	private Product Product = new();
+	private Product product = new();
+	private int shoppingCartId = 0;
 
 	public async Task GetProductAsync()
 	{
 		var id = int.Parse(Id);
-		Product = await repository.GetEntityAsync<Product>(p => p.Id == id);
+		product = await repository.GetEntityAsync<Product>(p => p.Id == id);
+		shoppingCartId = data.ShoppingCart.Id;
 	}
 
 	protected async override Task OnInitializedAsync()
