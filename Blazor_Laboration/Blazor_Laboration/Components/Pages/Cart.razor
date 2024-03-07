@@ -6,17 +6,45 @@
 
 <PageTitle>Shopping Cart</PageTitle>
 <h3>Shopping Cart</h3>
-<div>
-@foreach (var cartItem in CartItems)
-	{
-		<p>@cartItem.Product.Name  @cartItem.Product.Price Quantity : @cartItem.Quantity</p>
-	}
+<div class="align-content-center" style="max-width:100%">
+	<table class="table table-striped table-hover table-borderless" style="max-width:50%">
+		<thead class ="fw-bold">
+			<tr>
+				<td>Product name</td>
+				<td>Price</td>
+				<td>Quantity</td>
+				<td>Total price</td>
+			</tr>
+		</thead>
+		<tbody>
+		
+			@foreach (var cartItem in CartItems)
+				{
+					totalPrice = cartItem.Quantity * cartItem.Product.Price;
+					grandTotal += totalPrice;
+
+				<tr>
+					<td>@cartItem.Product.Name</td>
+					<td>@cartItem.Product.Price</td>
+					<td>@cartItem.Quantity</td>
+					<td>@totalPrice</td>
+				</tr>
+				}
+		<tr class="fw-bold">
+			<td colspan="2"></td>
+			<td>Grand total:</td>
+			<td>@grandTotal</td>
+		</tr>
+		</tbody>
+	</table>
 </div>
 
 
 @code
 {
 	List<CartItem> CartItems = new();
+	int totalPrice = 0;
+	int grandTotal = 0;
 
 	protected override void OnInitialized()
 	{
