@@ -5,14 +5,12 @@
 @inject IBlazorRepository repository
 @inject NavigationManager navigation
 
-<div class="float-sm-start" style="width: 33%" >
-<div class="card" style="width: 18rem;" @onclick="()=>GoToProducts(Product.Id)">
+
+<div class="card" @onclick="()=>GoToProducts(Product.Id)">
     <img class="card-img-top" src=@Product.ImageUrl alt=@Product.Name>
-    <div class="card-body">
+    <div class="card-body p-1 text-center">
         <h5 class="card-title">@Product.Name</h5>
     </div>
-</div>
-<BuyButton @rendermode="InteractiveServer" ProductId="Product.Id" ShoppingCartId="ShoppingCartId"/>
 </div>
 
 @code {

@@ -28,7 +28,8 @@ namespace Blazor_Laboration.Services
 			sessionId = Guid.NewGuid().ToString();
 			var options = new CookieOptions
 			{
-				Expires = DateTime.UtcNow.AddDays(7),
+				Expires = DateTime.UtcNow.AddMinutes(10),
+				Secure = true,
 				HttpOnly = true,
 				IsEssential = true
 			};

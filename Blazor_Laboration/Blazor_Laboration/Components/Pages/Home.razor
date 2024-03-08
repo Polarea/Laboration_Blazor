@@ -4,15 +4,19 @@
 @using Blazor_Laboration.Services
 
 <PageTitle>Home</PageTitle>
-<div class="d-flex justify-content-start" style="width:100%">
+<div class="container">
+	<h1 class="mb-5 fw-bold">Products</h1>
+	<div class = "row row-cols-3">
 	@foreach (var product in data.Products)
 	{
-		<ProductCard @rendermode="InteractiveServer" Product="@product" ShoppingCartId=@data.ShoppingCart.Id />
+		<div class = "col" style="width: 20rem">
+				<div style="width:100%">
+					<ProductCard @rendermode="InteractiveServer" Product="product" ShoppingCartId="data.ShoppingCart.Id" />
+				</div>
+				<div class="mb-5 bg-dark rounded-bottom p-1">
+					<BuyButton @rendermode="InteractiveServer" ProductId="product.Id" ShoppingCartId="data.ShoppingCart.Id" />
+				</div>
+			</div>
 	}
-</div>
-<div>
-	@foreach (var cartItem in data.ShoppingCart.CartItems)
-	{
-		<p>@cartItem.Product.Name  @cartItem.Product.Price Quantity : @cartItem.Quantity</p>
-	}
+	</div>
 </div>
